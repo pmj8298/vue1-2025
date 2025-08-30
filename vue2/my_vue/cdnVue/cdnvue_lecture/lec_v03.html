@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>3. 양방향 입출력</h1>
+        v-bind 데이터: <input v-bind:value="data">
+        v-on 데이터: <input v-on:keyup="data=$event.target.value">
+        v-on,v-bind 데이터: <input v-on:keyup="data=$event.target.value" v-bind:value="data">
+        <hr>
+        v-model 데이터: <input v-model="data">
+        <hr>
+        <div>담긴데이터:
+            <input type="text" v-bind:value="data" disabled> |
+            <button @click="fnConsole"> console로 전송</button> |
+            <button v-on:click="data='비울께요.'">휴지통</button>
+            <div>
+                <h3>{{data}}</h3>
+            </div>
+        </div>
+    </div>
+    <script>
+        const { createApp, ref } = Vue
+        createApp({
+            setup() {
+                const data = ref();
+                const fnConsole = () => console.log(data.value)
+                return { fnConsole, data }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>타이머 응용</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        span {
+            color: #2532b7;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+        <span id="time_disp">0 min 0 sec 000 msec</span>
+        <div>
+            <button @click="st">시작버튼</button>
+            <button @click="end">종료버튼</button>
+            <button @click="reset">초기화</button>
+        </div>
+    </div>
+    <script>
+        const { createApp } = Vue
+        let s_sec = id = end_sec = msec = min = sec = 0
+
+        createApp({
+
+            methods: {
+                st() {
+                    if (!s_sec) { // 중복클릭막기
+                        s_sec = Date.now()
+                        id = setInterval(() => {
+                            end_sec = Date.now() - s_sec
+                            msec = end_sec % 1000
+                            sec_ = parseInt(end_sec / 1000)
+                            sec = sec_ % 60
+                            min = parseInt(sec_ / 60)
+                            document.getElementById("time_disp").innerHTML = `${min}min ${sec}sec ${msec}msec`
+                        }, 1)
+                    }
+                }, rec() {
+                    console.log("시간을 기록합니다.")
+
+                }, end() {
+                    clearInterval(id)
+                    console.log("타이머가 종료 되었습니다.")
+                }, reset() {
+                    clearInterval(id)
+                    s_sec = end_sec = msec = sec = min = 0
+                    document.getElementById("time_disp").innerHTML = `0 min 0 sec 000 msec`
+                    console.log("타이머가 리셋되었습니다.")
+                }
+
+            },
+        }).mount('#app')
+
+
+    </script>
+</body>
+
+</html>

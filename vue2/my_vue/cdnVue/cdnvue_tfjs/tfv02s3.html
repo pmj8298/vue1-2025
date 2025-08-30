@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis"></script>
+    <style>
+        input {
+            border: none;
+            border-bottom: 2px solid #ccc;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="app">
+        <button @click="getModel">0.이전 값 로드</button> | <button @click="test">테스트 데이터 셋</button><br>
+        <hr>
+        <div>
+            <div>
+                <h4>1. 데이터 X와 Y의 관계를 예측하는 모델만들기</h4>
+                데이터X: <input v-model="tem"> => <span>({{showtem.length}}){{showtem}}</span><br>
+                데이터Y: <input v-model="sel"> => <span>({{showsel.length}}){{showsel}}</span>
+            </div>
+            <button @click="fix">1.데이터반영 {{'('+ok+')'}}</button>
+
+            <hr>
+        </div>
+        <h4>2. {{isLeaner}}모델을 반복 훈련 하기(<input type="radio" name="line-or" checked="checked" value=true
+                v-model="choice">선형<input type="radio" name="line-or" value=false v-model="choice">비선형
+            )</h4>
+        반복설정: <input type="number" name="" v-model="epoch" style="width: 50px;text-align: center;"> =>
+        <span>{{fitParm.epochs}} 회 훈련준비</span><br>
+        <button @click="fitting">2.분석 및 모델저장</button>
+        <div v-html="live"></div>
+        <div v-if="out0"><b>{{out0}}</b></div>
+        <div v-if="out1">{{out1}}</div>
+        <div id="plot"></div>
+        <hr>
+        <div>
+            <h4>3. 예측결과 얻기</h4>
+            예측할값:<input type="number" v-model.number="input" style="width: 50px;text-align: center"><br>
+            <button @click="pre">3.예측</button>
+            <h2>{{out}}</h2>
+        </div>
+    </div>
+    <script>
+
+        const { createApp, ref, reactive, computed, watch } = Vue
+        createApp({
+            setup() {
+                /* 1. 지도학습 과거데이터 */
+                const tem = ref([1, 2, 3, 4, 5, 6, 7, 8]);
+                const sel = ref([11, 22, 33, 44, 55, 66, 77, 88]);
+                const showtem = ref()
+                const showsel = ref()
+                const input = ref(3)
+                const ok = ref('')
+                const epoch = ref(500)
+                let out0 = ref('')
+                let out1 = ref('')
+                let out = ref('')
+                const live = ref()
+                const choice = ref(true)
+                const isLeaner = ref('기본')
+
+                /* 1-1. 수정사항반영 */
+                let xt, yt
+                const test = async () => {
+                    const carsDataResponse = await fetch('https://storage.googleapis.com/tfjs-tutorials/carsData.json');
+                    const carsData = await carsDataResponse.json();
+                    const cleaned = carsData.map(car => ({
+                        mpg: car.Miles_per_Gallon,
+                        horsepower: car.Horsepower,
+                    }))
+                        .filter(car => (car.mpg != null && car.horsepower != null));
+                    tem.value = []
+                    sel.value = []
+                    cleaned.map(v => {
+                        tem.value.push(v.mpg)
+                        sel.value.push(v.horsepower)
+                    })
+                }
+                const fix = () => {
+                    ok.value = "수정됨"
+                    if (Array.isArray(tem.value)) {
+                        xt = tf.tensor(tem.value)
+                        ok.value = "기본값"
+                        showtem.value = tem.value
+                    } else {
+                        showtem.value = (tem.value).split(',').map(Number)
+                        xt = tf.tensor(showtem.value);
+                    }
+                    if (Array.isArray(sel.value)) {
+                        yt = tf.tensor(sel.value)
+                        showsel.value = sel.value
+                    } else {
+                        showsel.value = (sel.value).split(',').map(Number)
+                        yt = tf.tensor(showsel.value)
+                    }
+                }
+                fix()
+
+                // watch([tem, sel], fix) // watch 예제
+                /* 2. 모델의 모양을 만들기 */
+                const X = tf.input({ shape: [1] }); //값 하나 들어옴
+                const compileParam = {
+                    optimizer: tf.train.adam(),
+                    loss: tf.losses.meanSquaredError,
+                };
+
+                const linear = () => {
+                    console.log('선형적용')
+                    isLeaner.value = '선형'
+                    const Y1 = tf.layers.dense({ units: 128 }).apply(X); // apply를 통해 연결
+                    const Y11 = tf.layers.dense({ units: 64 }).apply(Y1)
+                    const Y12 = tf.layers.dense({ units: 32 }).apply(Y11)
+                    const Y2 = tf.layers.dense({ units: 1 }).apply(Y12)
+                    return tf.model({ inputs: X, outputs: Y2 });
+                }
+                const nonlinear = () => {
+                    console.log('비선형적용')
+                    isLeaner.value = '비선형'
+                    const Y1 = tf.layers.dense({ units: 128, activation: 'relu' }).apply(X); // apply를 통해 연결
+                    const Y11 = tf.layers.dense({ units: 64, activation: 'softplus' }).apply(Y1) // softplus
+                    const Y12 = tf.layers.dense({ units: 32, activation: 'relu' }).apply(Y11)
+                    const Y2 = tf.layers.dense({ units: 1 }).apply(Y12)
+                    return tf.model({ inputs: X, outputs: Y2 });
+                    // .dense({ units: 10, activation: 'sigmoid' }) .dense({ units: 16, activation: 'relu' }) // units 사이즈 증가가 
+                }
+                // const Y2 = choice.value ? linear() : nonlinear()
+                // 인아웃풋 지정
+                // 최적화의 loss 측정방법종류
+                // const model = computed(() => choice.value ? linear() : nonlinear()).value
+                let model = linear()
+
+                watch(choice, () => {
+                    choice.value == 'true' ? model = linear() : model = nonlinear();
+                })
+
+
+                /* 3. 데이터로 학습을 시킴 */
+
+                const fitParm = computed(() => {
+                    return {
+                        epochs: epoch.value,
+                        // batchSize: 128,
+                        callbacks: {
+                            onEpochEnd:
+                                function (epoch, logs) {
+                                    // if (logs.loss < 0.1) { live.value = `적정값 정지`; return true }
+                                    console.log("epoch:", epoch + 1, logs, "RMSE=>", Math.sqrt(logs.loss));
+                                    live.value = `<div style="color:blue">epoch:${epoch + 1} => </div><div style="color:green"><em> Loss:${logs.loss}<br>RMSE:${Math.sqrt(logs.loss)}</em></div>`
+                                }
+                            ,
+                        },
+                    }
+                });
+                const show = () => {
+                    const predictedPoints = showsel.value.map((v, i) => {
+                        return { x: showtem.value[i], y: out1.value[i] }
+                    });
+
+                    const originalPoints = showtem.value.map((v, i) => {
+                        return { x: v, y: showsel.value[i], }
+                    });
+                    console.log('차트온')
+                    tfvis.render.scatterplot(
+                        document.getElementById('plot'),
+                        { name: 'Model Predictions vs Original Data', values: [originalPoints, predictedPoints], series: ['original', 'predicted'] },
+                        {
+                            xLabel: 'X데이터',
+                            yLabel: 'Y데이터',
+                            height: 400, width: 600,
+                            zoomToFit: true
+                        }
+                    );
+                }
+                const fitting = () => {
+                    console.log('값:', fitParm.value.epochs)
+
+                    model.compile(compileParam); // 컴파일
+                    model.fit(xt, yt, fitParm.value).then(async function () {
+                        const result = model.predict(xt);
+                        result.print();
+                        out0.value = "모델 저장됨"
+                        out1.value = await result.data()
+                        // model.save("downloads://my-model");
+                        model.save("localstorage://my-model");
+                        console.log(model, "모델 저장됨");
+                        await show()
+                    });
+                }
+                const getModel = () => {
+                    console.log(model, "모델 로드됨")
+                    return tf.loadLayersModel('localstorage://my-model')
+                }
+                const pre = async () => {
+                    const my = tf.tensor([input.value]);
+                    const model = await getModel();
+                    const mymy = model.predict(my)
+                    out.value = '예측된 값 : ' + await mymy.data()
+                }
+
+
+
+                return {
+                    fitting, pre, input, getModel, out0, out1, out, tem, sel, fix,
+                    xt, yt, ok, epoch, fitParm, showtem, showsel, live, show, choice, isLeaner,
+                    test
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

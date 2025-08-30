@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    ul {
+      list-style: none;
+    }
+
+    li {
+      text-align: left;
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid gray;
+      background-color: antiquewhite;
+    }
+  </style>
+</head>
+
+<body>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <div id="app">
+    <ul>
+      <li v-for="n in arr" :key="n">{{n}}</li>
+    </ul>
+  </div>
+  <script>
+    const { createApp } = Vue
+
+    createApp({
+      setup() {
+        return {
+          arr: Array(100)
+            .fill(0)
+            .map((v, i) => (v = i))
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+
+</html>

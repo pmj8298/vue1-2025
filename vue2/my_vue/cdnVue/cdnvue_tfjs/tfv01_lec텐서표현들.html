@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <div v-for="n in arr" :key="n+n.shape">
+            <div>{{ n }} , Rank: {{n.rankType}}, Shape: {{n.shape}} , Dtype: {{n.dtype}}, Size: {{n.size}}</div>
+        </div>
+    </div>
+    <script>
+        const { createApp, ref, reactive } = Vue
+
+        createApp({
+            setup() {
+                const arr = []
+                const a = tf.tensor([[1, 2], [3, 4]])
+                const b = a.reshape([4, 1])
+                a.print()
+                b.print()
+                arr.push(a);
+                arr.push(b);
+                arr.push(tf.scalar(1234));
+                arr.push(tf.tensor1d([1, 2, 3, 4]));
+                arr.push(tf.tensor2d([1, 2, 3, 4], [2, 2]));
+                arr.push(tf.tensor2d([[1, 2], [3, 4]]));
+                arr.push(tf.tensor3d([[[1], [2]], [[3], [4]]]));
+                arr.push(tf.tensor3d([1, 2, 3, 4], [2, 2, 1]));
+                arr.push(tf.tensor4d([[[[1], [2]], [[3], [4]]]]));
+                arr.push(tf.tensor4d([1, 2, 3, 4], [1, 2, 2, 1]));
+                arr.push(tf.oneHot(tf.tensor2d([1, 2, 3, 4], [2, 2], 'int32'), 5));
+                arr.push(tf.ones([2, 2]));
+                arr.push(tf.zeros([2, 2]));
+                console.log(arr)
+                // tf.setBackend('cpu'); // 환경변경
+                console.log(tf.getBackend());
+                return { arr }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

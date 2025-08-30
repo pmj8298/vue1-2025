@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    table {
+      text-align: center;
+      margin: auto;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <h1>6. 데이터 가져오기/ 분류하기</h1>
+    <h4>가져온 데이터:</h4>
+    <p>{{ dataArr }}</p>
+    <table>
+      <tr>
+        <th>카테고리</th>
+        <th>품명</th>
+        <th>가격</th>
+        <th>배송비</th>
+      </tr>
+      <template v-for="item in dataArr" :key="item">
+        <tr v-if="item.price > inUser">
+          <td>{{ item.category }}</td>
+          <td>{{ item.product_name }}</td>
+          <td>{{ item.price }}</td>
+          <td>{{ item.delivery_price }}</td>
+        </tr>
+      </template>
+    </table>
+    <br />
+    <span>얼마이상의 물품을 출력할까요? :</span><input type="text" v-model="inUser" />
+
+  </div>
+  <script src="./productData.js"></script>
+  <script>
+    const { createApp, reactive, ref } = Vue
+    createApp({
+      setup() {
+        const dataArr = reactive(data)
+        const inUser = ref(data.length)
+        return { dataArr, inUser }
+      }
+
+    }).mount('#app')
+  </script>
+</body>
+
+</html>

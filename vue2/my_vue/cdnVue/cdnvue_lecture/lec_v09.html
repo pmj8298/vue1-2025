@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="https://unpkg.com/vue-router@4"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p>
+            <router-link to="/">Home</router-link> |
+            <router-link to="/v01">예제1</router-link> |
+            <router-link to="/v02">예제2</router-link> |
+            <router-link to="/v03">예제3</router-link>
+        </p>
+        <router-view></router-view>
+    </div>
+    <script>
+        const { createApp, ref } = Vue
+        const Home = { template: '<div>Home</div>' }
+        const v01 = { template: '<div>v01</div>' }
+        const v02 = { template: '<div>v02</div>' }
+        const v03 = { template: '<div>v03</div>' }
+        const routes = [
+            { path: '/', component: Home },
+            { path: '/v01', component: v01 },
+            { path: '/v02', component: v02 },
+            { path: '/v03', component: v03 }
+        ]
+        const router = VueRouter.createRouter({
+            // 4. Provide the history implementation to use. We are using the hash history for simplicity here.
+            history: VueRouter.createWebHashHistory(),
+            routes, // short for `routes: routes`
+        })
+        createApp({
+            setup() {
+                return {}
+            }
+        }).use(router).mount('#app')
+    </script>
+</body>
+
+</html>

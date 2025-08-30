@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>5. 배열조작</h1>
+        <div>
+            <h3>datas = {{ arr }}</h3>
+            <button @click="add">추가</button>
+            <button @click="sub">삭제</button>
+            <ul>
+                <li v-for="data in arr" :key="data">{{ data }}</li>
+            </ul>
+        </div>
+
+
+    </div>
+
+
+    <script>
+        const { createApp, reactive } = Vue
+        createApp({
+            setup() {
+                const arr = reactive([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+                const add = () => arr.push(arr.length + 1)
+                const sub = () => arr.pop()
+                return { arr, add, sub }
+            }
+
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

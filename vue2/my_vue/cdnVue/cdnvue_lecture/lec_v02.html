@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>2. v-if, v-show</h1>
+        <div v-if="true">주문했어요.</div>
+        <div v-show="true">맛있겠다.</div>
+        <div v-if="false">생각보다 별로네..</div>
+        <div v-show="false">다신 안올꺼야!!</div>
+        <hr>
+        <button v-on:click="stat=true">보이기</button>
+        <button v-on:click="stat=false">안보이기</button>
+        <div>{{stat}}</div>
+        <div v-if="stat">나는 v-if</div>
+        <div v-show="stat">나는 v-show</div>
+    </div>
+    <script>
+        const { createApp, ref } = Vue
+        createApp({
+            setup() {
+                const stat = ref(false)
+                return { stat }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

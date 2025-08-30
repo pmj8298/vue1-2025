@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <h1>4. 문서속성</h1>
+        <div>
+            <input type="text" :value="obj.item" readonly /><br>
+            <!-- text를 읽기위주로 하여 값손 못댐 -->
+            <input type="text" :placeholder="obj.item" />
+            <hr />
+            <img :src="obj.링크" style="text-align: center" height="300" />
+            <br />
+            <input type="text" v-model="obj.data" />
+            <button :disabled="obj.data === ''" @click="aa('되네')">전송</button>
+            <!-- 참이면 동작 / 아니면 버튼 비활성화 -->
+            <br />
+        </div>
+    </div>
+    <script>
+        const { createApp, reactive } = Vue
+        createApp({
+            setup() {
+                const obj = reactive({
+                    item: '속성이 새겨짐',
+                    링크: 'http://www.sputnik.kr/article_img/202101/article_1611624282.jpg',
+                    data: ''
+                })
+                const aa = text => alert(obj.data + text)
+                return { obj, aa }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

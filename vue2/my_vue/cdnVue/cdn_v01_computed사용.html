@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <p>기본 주어지는 값{{data0}}</p>
+        <p>현재 모든 값{{data}}</p>
+        <p>10 보다 작은 수 : {{ smalls }}</p>
+        <p>10 과 같거나 큰 수 : {{ bigs }}</p>
+        <input type="number" @keyup.enter="$event.target.value=''" @change="data.push(Number($event.target.value))" />
+    </div>
+    <script>
+        const { createApp, ref, computed } = Vue
+        const data = ref([1, 2, 13, 4, 15, 6, 17, 8])
+        const data0 = [...data.value]
+        const smalls = computed(() => data.value.filter((element) => element < 10))
+        const bigs = computed(() => data.value.filter((element) => element >= 10))
+        createApp({
+            setup() {
+                return { smalls, bigs, data, data0 }
+            }
+        }).mount('#app')
+    </script>
+
+
+</body>
+
+</html>

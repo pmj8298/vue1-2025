@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis"></script>
+    <style>
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <button @click="getModel">0.이전 값 로드</button> <br>
+        <hr>
+        <div>
+            <div>
+                데이터X: <input v-model="tem"><br>
+                데이터Y: <input v-model="sel">
+            </div>
+            <button @click="fix">1.데이터반영 </button>
+            <div>{{ok}}</div>
+            <div>{{showtem}}({{showtem.length}})</div>
+            <div>{{showsel}}({{showsel.length}})</div>
+            <hr>
+        </div>
+        <button @click="fitting">2.분석 및 모델저장</button>
+        <div> 반복설정: <input type="number" name="" id="" v-model="epoch"></div>
+        <div>반영된 값: {{fitParm.epochs}}</div>
+        <hr>
+        <div>
+            <input v-model.number="input"><br>
+            <button @click="pre">3.예측</button>
+            <h2>{{out}}</h2>
+        </div>
+    </div>
+    <script>
+        const { createApp, ref, reactive, computed, watch } = Vue
+
+        createApp({
+            setup() {
+                /* 1. 지도학습 과거데이터 */
+                // const tem = ref([25, 26, 27, 28, 25, 26, 27, 28, 25, 26, 27, 28, 25, 26, 27, 28], [4, 4]);
+                // const sel = ref([69, 70, 71, 72], [4, 1]);
+                const tem = { value: [[25, 26, 27, 28], [25, 26, 27, 28], [25, 26, 27, 28], [25, 26, 27, 28]] }
+                const sel = { value: [[69], [70], [71], [72]] }
+                const showtem = ref()
+                const showsel = ref()
+                const input = ref(0)
+                const ok = ref('')
+                const epoch = ref(600)
+                let out = ref('')
+
+                /* 1-1. 수정사항반영 */
+                let xt, yt
+                const fix = () => {
+                    ok.value = "수정됨"
+                    if (Array.isArray(tem.value)) {
+                        xt = tf.tensor(tem.value)
+                        ok.value = "기본값"
+                        showtem.value = tem.value
+                    } else {
+                        showtem.value = (tem.value).split(',').map(Number)
+                        xt = tf.tensor(showtem.value);
+                    }
+                    if (Array.isArray(sel.value)) {
+                        yt = tf.tensor(sel.value)
+                        showsel.value = sel.value
+                    } else {
+                        showsel.value = (sel.value).split(',').map(Number)
+                        yt = tf.tensor(showsel.value)
+                    }
+                }
+                fix()
+
+                // watch([tem, sel], fix) // watch 예제
+                /* 2. 모델의 모양을 만들기 */
+                const X = tf.input({ shape: [4] }); //값 하나 들어옴
+                const Y1 = tf.layers.dense({ units: 64, activation: 'relu' }).apply(X); // apply를 통해 연결
+                const Y11 = tf.layers.dense({ units: 64, activation: 'relu' }).apply(Y1)
+                const Y2 = tf.layers.dense({ units: 1, }).apply(Y11)
+                // .dense({ units: 10, activation: 'sigmoid' }) .dense({ units: 16, activation: 'relu' }) // units 사이즈 증가가 
+                let model = tf.model({ inputs: X, outputs: Y2 }); // 인아웃풋 지정
+                const compileParam = {
+                    optimizer: tf.train.adam(),
+                    loss: tf.losses.meanSquaredError,
+                }; // 최적화의 loss 측정방법종류
+                model.compile(compileParam); // 컴파일
+
+                /* 3. 데이터로 학습을 시킴 */
+                const fitParm = computed(() => {
+                    return {
+                        epochs: epoch.value,
+                        // batchSize: 128,
+                        callbacks: {
+                            onEpochEnd: function (epoch, logs) {
+                                console.log("epoch:", epoch, logs, "RMSE=>", Math.sqrt(logs.loss));
+                            },
+                        },
+                    }
+                });
+                const fitting = () => {
+                    console.log('값:', fitParm.value.epochs)
+                    model.fit(xt, yt, fitParm.value).then(function () {
+                        const result = model.predict(xt);
+                        result.print();
+                        // model.save("downloads://my-model");
+                        model.save("localstorage://my-model");
+                        console.log(model, "모델 저장됨");
+                    });
+                }
+                const getModel = () => {
+                    console.log(model, "모델 로드됨")
+                    return tf.loadLayersModel('localstorage://my-model')
+                }
+                const pre = async () => {
+                    const my = tf.tensor([input.value]);
+                    const model = await getModel();
+                    const mymy = model.predict(my)
+                    mymy.print();
+                    out.value = '예측된 값 : ' + await mymy.data()
+                }
+
+                return { fitting, pre, input, getModel, out, tem, sel, fix, xt, yt, ok, epoch, fitParm, showtem, showsel }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>

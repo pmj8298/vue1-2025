@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+
+</head>
+
+<body>
+
+    <div id="app">
+        <button @click="main">스샷 동작</button>
+        <component :is='cpt' :rst="result"></component>
+    </div>
+
+    <script>
+        const { createApp, ref } = Vue
+        const comp1 = {
+            template: '<div id="display"></div><div>{{ rst }}</div>', props: ['rst']
+        }
+        const videoElement = document.createElement('video')
+
+        createApp({
+            setup() {
+                return {
+                    result: ref('분석중'),
+                    cpt: 'comp1'
+                }
+            },
+            methods: {
+                main: async function () {
+                    const display = document.getElementById('display')
+                    this.result = '이미지 분석중...'
+                    // const res = document.getElementById('result')
+                    display.append(videoElement)
+                    videoElement.width = 400
+                    videoElement.height = 400
+                    const cam = await tf.data.webcam(videoElement)
+                    const net = await mobilenet.load() // 위아래 바꿈 동작함;;
+                    const img = await cam.capture()
+                    const result = await net.classify(img)
+                    img.print()
+                    tf.dispose(img)
+                    this.result =
+                        '분석결과: ' +
+                        result[0].className +
+                        '(' +
+                        (result[0].probability * 100).toFixed(2) +
+                        '%)'
+                },
+            }, components: {
+                comp1
+            }
+
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
